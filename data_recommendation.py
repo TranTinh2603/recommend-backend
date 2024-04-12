@@ -44,19 +44,28 @@ def prepare_data():
 
     item_similarity = cosine_similarity(ratings_matrix.T)
     item_similarity_matrix = pd.DataFrame(item_similarity, index=ratings_matrix.columns, columns=ratings_matrix.columns)
+
+    print("ratings_matrix", ratings_matrix)
+    print("item_similarity_matrix", item_similarity_matrix)
     
     return ratings_matrix, item_similarity_matrix
 
 def predict_rating(user_id, item_id, ratings_matrix, item_similarity_matrix):
     similar_items = item_similarity_matrix[item_id]
+    print("similar_items: ",similar_items.index)
     user_ratings = ratings_matrix.loc[user_id, :]
+    print("user_ratings", user_ratings)
     similar_ratings = user_ratings[similar_items.index]
-    weighted_sum = np.sum(similar_items * similar_ratings)
-    sum_of_weights = np.sum(similar_items)
-    if sum_of_weights != 0:
-        predicted_rating = weighted_sum / sum_of_weights
+    print("similar_ratings", similar_ratings)
+    similar_items_similar_ratings_sum = np.sum(similar_items * similar_ratings)
+    print("similar_items_similar_ratings_sum", similar_items_similar_ratings_sum)
+    sum_similar_item = np.sum(similar_items)
+    print("sum_similar_item",sum_similar_item)
+    if sum_similar_item != 0:
+        predicted_rating = similar_items_similar_ratings_sum / sum_similar_item
     else:
         predicted_rating = None
+    print("predicted_rating", predicted_rating)
     return predicted_rating
 
 def predict_ratings_for_user(user_id, ratings_matrix, item_similarity_matrix):
@@ -70,8 +79,10 @@ def predict_ratings_for_user(user_id, ratings_matrix, item_similarity_matrix):
 def recommend_items(user_id, ratings_matrix, item_similarity_matrix, n=10):
     user_ratings = ratings_matrix.loc[user_id].values.reshape(1, -1)
     predicted_ratings = predict_ratings_for_user(user_id, ratings_matrix, item_similarity_matrix)
+    print("predicted_ratings",predicted_ratings)
     rated_items = np.where(user_ratings.flatten() != 0)[0]
     array_predicted_ratings = np.array(predicted_ratings)
+    print("array_predicted_ratings", array_predicted_ratings)
     array_predicted_ratings[rated_items] = -1
     top_n_items = np.argsort(array_predicted_ratings)[::-1][:n]
     return top_n_items
